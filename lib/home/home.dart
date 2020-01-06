@@ -1,8 +1,7 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:acai_flutter/add/add.dart';
-import 'package:acai_flutter/config/config.dart';
+import 'package:acai_flutter/util/DioUtils.dart';
 import 'package:flutter/material.dart';
 import 'package:oktoast/oktoast.dart';
 
@@ -12,24 +11,18 @@ class MyHomePage extends StatefulWidget {
   final String title;
 
   @override
-  _MyHomePageState createState() => _MyHomePageState();
+  MyHomePageState createState() => MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class MyHomePageState extends State<MyHomePage> {
   List items = new List();
 
-  _findMoneyRecordList() async {
-    var url = baseUrl + '/api/moneyRecord';
-    var httpClient = new HttpClient();
-    httpClient.findProxy = (uri) {
-      return "PROXY $proxy;";
-    };
+  findMoneyRecordList() async {
+    var dio = DioUtils.getDio();
     try {
-      var request = await httpClient.getUrl(Uri.parse(url));
-      var response = await request.close();
+      var response = await dio.get('/api/moneyRecord');
       if (response.statusCode == HttpStatus.ok) {
-        var json = await response.transform(utf8.decoder).join();
-        var data = jsonDecode(json);
+        var data = response.data;
         items = data['Data'];
       } else {
         showToast('查询失败:Http status ${response.statusCode}');
@@ -44,13 +37,13 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   void initState() {
-    _findMoneyRecordList();
+    findMoneyRecordList();
     super.initState();
   }
 
   @override
   void deactivate() {
-    _findMoneyRecordList();
+    findMoneyRecordList();
     super.deactivate();
   }
 
@@ -67,9 +60,9 @@ class _MyHomePageState extends State<MyHomePage> {
             title: new Text('金额：${items[index]['Money']}'),
             subtitle: new Text('用途：${items[index]['ClassificationName']}' +
                 '       ' +
-                '备注：${items[index]['Remark']}'
-                '       ' +
-                '时间：${items[index]['RecordDateTime']}'),
+                '时间：${items[index]['RecordDateTime']}'
+                    '       ' +
+                '备注：${items[index]['Remark']}'),
           );
         },
       ),
@@ -77,7 +70,8 @@ class _MyHomePageState extends State<MyHomePage> {
         onPressed: () {
           Navigator.push(
             context,
-            new MaterialPageRoute(builder: (context) => new AddRecordWidget(title: '新增')),
+            new MaterialPageRoute(
+                builder: (context) => new AddRecordWidget(title: '新增')),
           );
         },
         // onPressed: _findMoneyRecordList,
