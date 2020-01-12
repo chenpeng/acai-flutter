@@ -255,7 +255,7 @@ class AddRecordWidgetState extends State<AddRecordWidget> {
   }
 
   upLoadImage(File image) async {
-    var url = '/api/nas/upload';
+    var url = '/api/moneyRecord/upload';
     Dio dio = DioUtils.getDio();
     FormData formData = FormData.fromMap({
       "file": await MultipartFile.fromFile(image.path, filename: "xxx.png")
