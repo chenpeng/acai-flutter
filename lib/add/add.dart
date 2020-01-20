@@ -42,6 +42,7 @@ class AddRecordWidgetState extends State<AddRecordWidget> {
       var response =
           await dio.get(url, queryParameters: {"type": classificationType});
       if (response.statusCode == HttpStatus.ok) {
+        classificationList.clear();
         var data = response.data;
         data["Data"].forEach((f){
           Classification c = new Classification();
@@ -132,6 +133,7 @@ class AddRecordWidgetState extends State<AddRecordWidget> {
                             setState(() {
                               classificationType = value;
                             });
+                            findClassification();
                           },
                         ),
                       ],
@@ -149,6 +151,7 @@ class AddRecordWidgetState extends State<AddRecordWidget> {
                             setState(() {
                               classificationType = value;
                             });
+                            findClassification();
                           },
                         ),
                       ],
