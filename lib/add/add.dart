@@ -1,6 +1,4 @@
-import 'dart:developer';
 import 'dart:io';
-import 'dart:math';
 
 import 'package:acai_flutter/model/Classification.dart';
 import 'package:acai_flutter/util/DioUtils.dart';
@@ -37,14 +35,14 @@ class AddRecordWidgetState extends State<AddRecordWidget> {
 
   findClassification() async {
     var url = '/api/classification';
-    var dio = DioUtils.getDio();
+    var dio = await DioUtils.getDio();
     try {
       var response =
           await dio.get(url, queryParameters: {"type": classificationType});
       if (response.statusCode == HttpStatus.ok) {
         classificationList.clear();
         var data = response.data;
-        data["Data"].forEach((f){
+        data["Data"].forEach((f) {
           Classification c = new Classification();
           c.Code = f["Code"];
           c.Name = f["Name"];
@@ -72,7 +70,7 @@ class AddRecordWidgetState extends State<AddRecordWidget> {
     money = double.parse(moneyTxt);
 
     var url = '/api/moneyRecord';
-    var dio = DioUtils.getDio();
+    var dio = await DioUtils.getDio();
     try {
       var response = await dio.post(url, data: {
         'ClassificationCode': classification.Code,
@@ -246,7 +244,7 @@ class AddRecordWidgetState extends State<AddRecordWidget> {
                   elevation: 2,
                   highlightElevation: 2,
                   onPressed: () {
-                    Navigator.of(context).pop();
+                    Navigator.pop(context);
                   },
                 ),
               ),
@@ -259,7 +257,7 @@ class AddRecordWidgetState extends State<AddRecordWidget> {
 
   upLoadImage(File image) async {
     var url = '/api/moneyRecord/upload';
-    Dio dio = DioUtils.getDio();
+    Dio dio = await DioUtils.getDio();
     FormData formData = FormData.fromMap({
       "file": await MultipartFile.fromFile(image.path, filename: "xxx.png")
     });

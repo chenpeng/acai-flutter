@@ -1,12 +1,15 @@
+import 'package:acai_flutter/config/config.dart';
 import 'package:flutter/material.dart';
 import 'package:oktoast/oktoast.dart';
 
 import 'home/home.dart';
 
-void main() => runApp(MyApp());
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  AppConfig.init('http://localhost:8000').then((e) => runApp(MyApp()));
+}
 
 class MyApp extends StatelessWidget {
-
   @override
   Widget build(BuildContext context) {
     return OKToast(

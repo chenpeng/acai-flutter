@@ -26,6 +26,8 @@ dependencies:
   oktoast: ^2.2.0
   image_picker: 0.6.2+3
   dio: 3.0.8
+  shared_preferences: 0.5.6
+  pull_to_refresh: ^1.5.8
 
 dev_dependencies:
   flutter_test:

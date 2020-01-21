@@ -1,18 +1,13 @@
-import 'package:acai_flutter/config/config.dart';
-import 'package:dio/adapter.dart';
 import 'package:dio/dio.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class DioUtils {
-  static Dio getDio(){
+  static Future<Dio> getDio() async {
     Dio dio = new Dio();
-    dio.options.baseUrl = baseUrl;
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    dio.options.baseUrl = prefs.getString('baseUrl');
     dio.options.connectTimeout = 5000;
     dio.options.receiveTimeout = 3000;
-    (dio.httpClientAdapter as DefaultHttpClientAdapter).onHttpClientCreate = (client) {
-      client.findProxy = (uri) {
-        return "PROXY localhost:6152";
-      };
-    };
     return dio;
   }
 }
