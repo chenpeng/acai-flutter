@@ -72,8 +72,8 @@ class MyHomePageState extends State<MyHomePage> {
 
   @override
   void deactivate() {
-    findMoneyRecordList();
     super.deactivate();
+    findMoneyRecordList();
   }
 
   @override
