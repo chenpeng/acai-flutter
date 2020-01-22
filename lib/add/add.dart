@@ -244,7 +244,7 @@ class AddRecordWidgetState extends State<AddRecordWidget> {
                   elevation: 2,
                   highlightElevation: 2,
                   onPressed: () {
-                    Navigator.pop(context);
+                    Navigator.pop(context, '');
                   },
                 ),
               ),

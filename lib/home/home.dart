@@ -26,7 +26,7 @@ class MyHomePageState extends State<MyHomePage> {
   void onRefresh() async {
     setState(() {
       pageIndex = 1;
-      items.clear();
+      items = new List();
     });
     // monitor network fetch
     await findMoneyRecordList();
@@ -53,7 +53,11 @@ class MyHomePageState extends State<MyHomePage> {
         var data = response.data;
         if (data['Data'].length > 0) {
           setState(() {
-            items.addAll(data['Data']);
+            if (pageIndex == 1) {
+              items = data['Data'];
+            } else {
+              items.addAll(data['Data']);
+            }
           });
         }
       } else {
@@ -68,17 +72,6 @@ class MyHomePageState extends State<MyHomePage> {
   void initState() {
     super.initState();
     findMoneyRecordList();
-  }
-
-  @override
-  void deactivate() {
-    super.deactivate();
-    findMoneyRecordList();
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
   }
 
   @override
@@ -146,6 +139,10 @@ class MyHomePageState extends State<MyHomePage> {
       new MaterialPageRoute(
         builder: (context) => new AddRecordWidget(title: '新增'),
       ),
-    );
+    ).then((data) {
+      if (mounted) {
+        onRefresh();
+      }
+    });
   }
 }
