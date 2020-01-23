@@ -15,12 +15,12 @@ class MyApp extends StatelessWidget {
     return OKToast(
       dismissOtherOnShow: true,
       child: MaterialApp(
-        title: '阿财',
+        title: '阿财DEV',
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
           primarySwatch: Colors.blue,
         ),
-        home: MyHomePage(title: '阿财'),
+        home: MyHomePage(title: '阿财DEV'),
       ),
     );
   }
