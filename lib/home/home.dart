@@ -114,7 +114,7 @@ class MyHomePageState extends State<MyHomePage> {
             title: new Text('金额：${items[index]['Money']}'),
             subtitle: new Text('用途：${items[index]['ClassificationName']}' +
                 '             ' +
-                '时间：${DateTime.parse(items[index]['RecordDateTime']).toLocal()}'
+                '时间：${DateTime.parse(items[index]['RecordDateTime'])}'
                     '                  ' +
                 '备注：${items[index]['Remark']}'),
           ))),
