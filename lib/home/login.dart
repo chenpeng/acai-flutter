@@ -17,7 +17,8 @@ class Login extends StatefulWidget {
 }
 
 class LoginState extends State<Login> {
-  final TextEditingController textController = new TextEditingController();
+  final TextEditingController usernameController = new TextEditingController();
+  final TextEditingController passwordController = new TextEditingController();
   var publicKey;
 
   @override
@@ -49,16 +50,22 @@ class LoginState extends State<Login> {
   }
 
   Future login() async {
-    String text = textController.text;
+    String username = usernameController.text;
+    String password = passwordController.text;
+    if (username == '' || password == '') {
+      return;
+    }
+    String text = username + ";" + password;
     var iv = IV.fromSecureRandom(256);
     var random = iv.base64;
     String encrypted =
-        Encrypter(RSA(publicKey: publicKey)).encrypt(text,iv: iv).base64;
+        Encrypter(RSA(publicKey: publicKey)).encrypt(text, iv: iv).base64;
     print(encrypted);
-    var url = '/api/oauth/decrypt';
+    var url = '/api/oauth/signIn';
     var dio = await DioUtils.getDio();
     try {
-      var response = await dio.post(url, data: {'Text': encrypted, 'Random': random});
+      var response =
+          await dio.post(url, data: {'Text': encrypted, 'Random': random});
       if (response.statusCode == HttpStatus.ok) {
         var data = response.data;
         print("返回时:");
@@ -83,10 +90,22 @@ class LoginState extends State<Login> {
             children: <Widget>[
               Expanded(
                 child: TextField(
-                    controller: textController,
+                    controller: usernameController,
                     decoration: InputDecoration(
                       border: OutlineInputBorder(),
-                      labelText: '备注',
+                      labelText: '账号',
+                    )),
+              ),
+            ],
+          ),
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: TextField(
+                    controller: passwordController,
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(),
+                      labelText: '密码',
                     )),
               ),
             ],
@@ -94,7 +113,7 @@ class LoginState extends State<Login> {
           Row(
             children: <Widget>[
               RaisedButton(
-                child: Text('加密'),
+                child: Text('登录'),
                 elevation: 1,
                 highlightElevation: 1,
                 onPressed: login,
