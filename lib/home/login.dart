@@ -49,7 +49,36 @@ class LoginState extends State<Login> {
     }
   }
 
-  Future login() async {
+  Future signUp() async {
+    String username = usernameController.text;
+    String password = passwordController.text;
+    if (username == '' || password == '') {
+      return;
+    }
+    String text = username + ";" + password;
+    var iv = IV.fromSecureRandom(256);
+    var random = iv.base64;
+    String encrypted =
+        Encrypter(RSA(publicKey: publicKey)).encrypt(text, iv: iv).base64;
+    print(encrypted);
+    var url = '/api/oauth/signUp';
+    var dio = await DioUtils.getDio();
+    try {
+      var response =
+          await dio.post(url, data: {'Text': encrypted, 'Random': random});
+      if (response.statusCode == HttpStatus.ok) {
+        var data = response.data;
+        print("返回时:");
+        print(data['Data']);
+      } else {
+        print('查询失败:${response.statusCode}');
+      }
+    } catch (e) {
+      print('查询失败');
+    }
+  }
+
+  Future signIn() async {
     String username = usernameController.text;
     String password = passwordController.text;
     if (username == '' || password == '') {
@@ -116,7 +145,7 @@ class LoginState extends State<Login> {
                 child: Text('登录'),
                 elevation: 1,
                 highlightElevation: 1,
-                onPressed: login,
+                onPressed: signIn,
               )
             ],
           ),
@@ -127,6 +156,16 @@ class LoginState extends State<Login> {
                 elevation: 1,
                 highlightElevation: 1,
                 onPressed: getPublicKey,
+              )
+            ],
+          ),
+          Row(
+            children: <Widget>[
+              RaisedButton(
+                child: Text('注册'),
+                elevation: 1,
+                highlightElevation: 1,
+                onPressed: signUp,
               )
             ],
           ),
