@@ -7,6 +7,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 
+import 'package:oktoast/oktoast.dart';
+
 class Login extends StatefulWidget {
   Login({this.text});
 
@@ -34,13 +36,18 @@ class LoginState extends State<Login> {
       var response = await dio.get(url);
       if (response.statusCode == HttpStatus.ok) {
         var data = response.data;
-        setState(() {
-          var str = data['Data'];
-          final parser = RSAKeyParser();
-          publicKey = parser.parse(str);
-          print("公钥：");
-          print(str);
-        });
+        var code = data['Code'];
+        if (code == "0") {
+          setState(() {
+            var str = data['Data'];
+            final parser = RSAKeyParser();
+            publicKey = parser.parse(str);
+            print("公钥：");
+            print(str);
+          });
+        } else {
+          showToast("获取公钥失败");
+        }
       } else {
         print('查询失败:${response.statusCode}');
       }
