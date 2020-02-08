@@ -75,8 +75,14 @@ class LoginState extends State<Login> {
           await dio.post(url, data: {'Text': encrypted, 'Random': random});
       if (response.statusCode == HttpStatus.ok) {
         var data = response.data;
-        print("返回时:");
-        print(data['Data']);
+        var code = data['Code'];
+        if (code == "0") {
+          print("返回时:");
+          print(data['Data']);
+          showToast("注册成功");
+        } else {
+          showToast("注册失败");
+        }
       } else {
         print('查询失败:${response.statusCode}');
       }
