@@ -1,8 +1,9 @@
 import 'package:acai_flutter/config/config.dart';
+import 'package:acai_flutter/home/home.dart';
+import 'package:acai_flutter/home/login.dart';
+import 'package:acai_flutter/home/splash.dart';
 import 'package:flutter/material.dart';
 import 'package:oktoast/oktoast.dart';
-
-import 'home/home.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,11 +17,16 @@ class MyApp extends StatelessWidget {
       dismissOtherOnShow: true,
       child: MaterialApp(
         title: '阿财DEV',
+        routes: {
+          'login':(context) => Login(),
+          'home':(context) => MyHomePage(title: "阿财",),
+        },
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
           primarySwatch: Colors.blue,
         ),
-        home: MyHomePage(title: '阿财DEV'),
+//        home: MyHomePage(title: '阿财DEV'),
+        home: SplashPage(),
       ),
     );
   }
