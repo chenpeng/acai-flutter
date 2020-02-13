@@ -2,10 +2,12 @@ import 'dart:io';
 
 import 'package:acai_flutter/model/Classification.dart';
 import 'package:acai_flutter/util/DioUtils.dart';
+import 'package:datetime_picker_formfield/datetime_picker_formfield.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:oktoast/oktoast.dart';
+import 'package:intl/intl.dart';
 
 class AddRecordWidget extends StatefulWidget {
   final String title;
@@ -25,6 +27,8 @@ class AddRecordWidgetState extends State<AddRecordWidget> {
   int classificationType;
   List<Classification> classificationList = new List<Classification>();
   Classification classification;
+  final format = DateFormat("yyyy-MM-dd");
+  DateTime dateTxt;
 
   @override
   void initState() {
@@ -36,58 +40,56 @@ class AddRecordWidgetState extends State<AddRecordWidget> {
   findClassification() async {
     var url = '/api/classification';
     var dio = await DioUtils.getDio();
-    try {
-      var response =
-          await dio.get(url, queryParameters: {"type": classificationType});
-      if (response.statusCode == HttpStatus.ok) {
-        classificationList.clear();
-        var data = response.data;
-        data["Data"].forEach((f) {
-          Classification c = new Classification();
-          c.Code = f["Code"];
-          c.Name = f["Name"];
-          classificationList.add(c);
-        });
-        if (classificationList != null && classificationList.length > 0) {
-          classification = classificationList.elementAt(0);
-        }
-        setState(() {
-          classificationList = classificationList;
-          classification = classification;
-        });
-      } else {
-        showToast('查询失败:${response.statusCode}');
-      }
-    } catch (e) {
-      showToast('查询失败');
+    var response =
+        await dio.get(url, queryParameters: {"type": classificationType});
+    classificationList.clear();
+    var data = response.data;
+    data["data"].forEach((f) {
+      Classification c = new Classification();
+      c.code = f["code"];
+      c.name = f["name"];
+      classificationList.add(c);
+    });
+    if (classificationList != null && classificationList.length > 0) {
+      classification = classificationList.elementAt(0);
     }
+    setState(() {
+      classificationList = classificationList;
+      classification = classification;
+    });
   }
 
   saveMoneyRecord() async {
     String moneyTxt = moneyController.text;
     String remarkTxt = remarkController.text;
-
+    if (moneyTxt == '' ||
+        remarkTxt == '' ||
+        moneyTxt == '' ||
+        dateTxt == null) {
+      showToast("请补全信息");
+      return;
+    }
     money = double.parse(moneyTxt);
 
     var url = '/api/moneyRecord';
     var dio = await DioUtils.getDio();
-    try {
-      var response = await dio.post(url, data: {
-        'ClassificationCode': classification.Code,
-        'ClassificationName': classification.Name,
-        'Money': money,
-        'Type': classificationType,
-        'Remark': remarkTxt,
-        'PicUrl': fileName,
-      });
-      if (response.statusCode == HttpStatus.ok) {
-        Navigator.of(context).pop();
-        showToast('添加成功');
-      } else {
-        showToast('添加失败:${response.statusCode}');
-      }
-    } catch (exception) {
-      showToast('添加失败:$exception');
+    var response = await dio.post(url, data: {
+      'classification_code': classification.code,
+      'classification_name': classification.name,
+      'record_date_time': dateTxt.toString(),
+      'money': money,
+      'type': classificationType,
+      'remark': remarkTxt,
+      'picUrl': fileName,
+    });
+    var data = response.data;
+    var code = data['code'];
+    if (code == 0) {
+      Navigator.of(context).pop();
+      showToast('添加成功');
+    } else {
+      var msg = data['message'];
+      showToast(msg);
     }
   }
 
@@ -105,6 +107,7 @@ class AddRecordWidgetState extends State<AddRecordWidget> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
+        automaticallyImplyLeading: false,
       ),
       body: Column(
         children: <Widget>[
@@ -174,7 +177,7 @@ class AddRecordWidgetState extends State<AddRecordWidget> {
                   items: classificationList.map((Classification map) {
                     return DropdownMenuItem<Classification>(
                       value: map,
-                      child: Text(map.Name),
+                      child: Text(map.name),
                     );
                   }).toList(),
                 ),
@@ -190,6 +193,29 @@ class AddRecordWidgetState extends State<AddRecordWidget> {
                     border: OutlineInputBorder(),
                     labelText: '金额',
                   ),
+                ),
+              ),
+            ],
+          ),
+          Row(
+            children: <Widget>[
+              Text("时间："),
+              Expanded(
+                child: DateTimeField(
+                  onChanged: (value) {
+                    setState(() {
+                      dateTxt = value;
+                    });
+                  },
+                  format: format,
+                  onShowPicker: (context, currentValue) {
+                    return showDatePicker(
+                        context: context,
+                        locale: Locale('zh'),
+                        firstDate: DateTime(1900),
+                        initialDate: currentValue ?? DateTime.now(),
+                        lastDate: DateTime(2100));
+                  },
                 ),
               ),
             ],
