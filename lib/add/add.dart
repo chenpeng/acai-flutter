@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:acai_flutter/model/Classification.dart';
+import 'package:acai_flutter/model/MoneyRecord.dart';
 import 'package:acai_flutter/util/DioUtils.dart';
 import 'package:datetime_picker_formfield/datetime_picker_formfield.dart';
 import 'package:dio/dio.dart';
@@ -8,11 +9,16 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:oktoast/oktoast.dart';
 import 'package:intl/intl.dart';
+import 'dart:typed_data';
+
+import 'package:path_provider/path_provider.dart';
 
 class AddRecordWidget extends StatefulWidget {
+  final String code;
   final String title;
+  final int id;
 
-  AddRecordWidget({Key key, this.title}) : super(key: key);
+  AddRecordWidget({Key key, this.title, this.code, this.id}) : super(key: key);
 
   @override
   AddRecordWidgetState createState() => new AddRecordWidgetState();
@@ -21,6 +27,7 @@ class AddRecordWidget extends StatefulWidget {
 class AddRecordWidgetState extends State<AddRecordWidget> {
   final TextEditingController moneyController = new TextEditingController();
   final TextEditingController remarkController = new TextEditingController();
+  final TextEditingController dateController = new TextEditingController();
   File image;
   String fileName;
   double money;
@@ -29,6 +36,7 @@ class AddRecordWidgetState extends State<AddRecordWidget> {
   Classification classification;
   final format = DateFormat("yyyy-MM-dd");
   DateTime dateTxt;
+  MoneyRecord moneyRecord;
 
   @override
   void initState() {
@@ -45,17 +53,17 @@ class AddRecordWidgetState extends State<AddRecordWidget> {
     classificationList.clear();
     var data = response.data;
     data["data"].forEach((f) {
-      Classification c = new Classification();
-      c.code = f["code"];
-      c.name = f["name"];
+      Classification c = new Classification(f["code"], f["name"]);
       classificationList.add(c);
     });
-    if (classificationList != null && classificationList.length > 0) {
-      classification = classificationList.elementAt(0);
-    }
     setState(() {
       classificationList = classificationList;
-      classification = classification;
+      String code = widget.code;
+//      if (code == 'add') {
+      if (classificationList != null && classificationList.length > 0) {
+        classification = classificationList.elementAt(0);
+      }
+//      }
     });
   }
 
@@ -73,22 +81,28 @@ class AddRecordWidgetState extends State<AddRecordWidget> {
 
     var url = '/api/moneyRecord';
     var dio = await DioUtils.getDio();
-    var response = await dio.post(url, data: {
+    var param = {
       'classification_code': classification.code,
       'classification_name': classification.name,
       'record_date_time': dateTxt.toString(),
       'money': money,
       'type': classificationType,
       'remark': remarkTxt,
-      'picUrl': fileName,
-    });
+      'pic_url': fileName,
+    };
+    var response;
+    if (widget.code == 'add') {
+      response = await dio.post(url, data: param);
+    } else if (widget.code == 'update') {
+      response = await dio.put(url + "/" + widget.id.toString(), data: param);
+    }
     var data = response.data;
     var code = data['code'];
+    var msg = data['message'];
     if (code == 0) {
       Navigator.of(context).pop();
-      showToast('添加成功');
+      showToast(msg);
     } else {
-      var msg = data['message'];
       showToast(msg);
     }
   }
@@ -102,8 +116,55 @@ class AddRecordWidgetState extends State<AddRecordWidget> {
     });
   }
 
+  findMoneyRecordById(int id) async {
+    var dio = await DioUtils.getDio();
+    var response = await dio.get('/api/moneyRecord/' + id.toString());
+    var data = response.data;
+    var code = data['code'];
+    if (code == 0) {
+      setState(() {
+        moneyRecord = MoneyRecord.fromMap(data['data']);
+        classificationType = moneyRecord.type;
+        classification = new Classification(
+            moneyRecord.classificationCode, moneyRecord.classificationName);
+        moneyController.text = moneyRecord.money.toString();
+        dateController.text = moneyRecord.recordDateTime;
+        remarkController.text = moneyRecord.remark;
+      });
+      findImageByUrl(moneyRecord.picUrl);
+    }
+  }
+
+  findImageByUrl(String picUrl) async {
+    if (picUrl == "") {
+      return;
+    }
+    var dio = await DioUtils.getDio();
+    var response = await dio
+        .get('/api/moneyRecord/download', queryParameters: {"picUrl": picUrl});
+    Directory tempDir = await getTemporaryDirectory();
+    String tempPath = tempDir.path;
+    File file = new File('$tempPath/$picUrl');
+    file
+        .writeAsBytes(Uint8List.fromList(response.data.codeUnits))
+        .then((onValue) {
+      setState(() {
+        image = file;
+      });
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    String code = widget.code;
+    if (code == 'update') {
+      int id = widget.id;
+      findMoneyRecordById(id);
+    }
+    // 获取图片
+//    findImageByUrl(moneyRecord.picUrl);
+    print("build:");
+    print(classification.name);
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
@@ -202,6 +263,7 @@ class AddRecordWidgetState extends State<AddRecordWidget> {
               Text("时间："),
               Expanded(
                 child: DateTimeField(
+                  controller: dateController,
                   onChanged: (value) {
                     setState(() {
                       dateTxt = value;
@@ -209,6 +271,7 @@ class AddRecordWidgetState extends State<AddRecordWidget> {
                   },
                   format: format,
                   onShowPicker: (context, currentValue) {
+                    currentValue = dateTxt;
                     return showDatePicker(
                         context: context,
                         locale: Locale('zh'),
@@ -291,7 +354,9 @@ class AddRecordWidgetState extends State<AddRecordWidget> {
       var response = await dio.post(url, data: formData);
       if (response.statusCode == HttpStatus.ok) {
         var data = response.data;
-        fileName = data['Data'];
+        setState(() {
+          fileName = data['data'];
+        });
         showToast('上传成功');
       } else {
         showToast('上传失败:Http status ${response.statusCode}');
