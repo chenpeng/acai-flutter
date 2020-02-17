@@ -1,10 +1,6 @@
-class Classification{
-  int Code;
-  String  Name;
+class Classification {
+  int code;
+  String name;
 
-  Classification({
-    this.Code,
-    this.Name
-  });
+  Classification(this.code, this.name);
 }
-
