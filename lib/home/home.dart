@@ -1,10 +1,7 @@
-import 'dart:io';
-
 import 'package:acai_flutter/add/add.dart';
 import 'package:acai_flutter/util/DioUtils.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:oktoast/oktoast.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 
 class MyHomePage extends StatefulWidget {
@@ -46,25 +43,17 @@ class MyHomePageState extends State<MyHomePage> {
 
   findMoneyRecordList() async {
     var dio = await DioUtils.getDio();
-    try {
-      var response = await dio.get('/api/moneyRecord',
-          queryParameters: {'pageIndex': pageIndex, 'pageSize': pageSize});
-      if (response.statusCode == HttpStatus.ok) {
-        var data = response.data;
-        if (data['Data'].length > 0) {
-          setState(() {
-            if (pageIndex == 1) {
-              items = data['Data'];
-            } else {
-              items.addAll(data['Data']);
-            }
-          });
+    var response = await dio.get('/api/moneyRecord',
+        queryParameters: {'pageIndex': pageIndex, 'pageSize': pageSize});
+    var data = response.data;
+    if (data['data'].length > 0) {
+      setState(() {
+        if (pageIndex == 1) {
+          items = data['data'];
+        } else {
+          items.addAll(data['data']);
         }
-      } else {
-        showToast('查询失败:Http status ${response.statusCode}');
-      }
-    } catch (exception) {
-      showToast('查询失败:$exception');
+      });
     }
   }
 
@@ -79,6 +68,7 @@ class MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
+        automaticallyImplyLeading: false,
       ),
       body: SmartRefresher(
         enablePullDown: true,
@@ -111,12 +101,22 @@ class MyHomePageState extends State<MyHomePage> {
           itemBuilder: (context, index) => Card(
               child: Center(
                   child: new ListTile(
-            title: new Text('金额：${items[index]['Money']}'),
-            subtitle: new Text('用途：${items[index]['ClassificationName']}' +
+            onTap: () {
+              int id = items[index]['id'];
+              Navigator.push(
+                context,
+                new MaterialPageRoute(
+                  builder: (context) => new AddRecordWidget(
+                      code: 'update', title: '修改', id: id),
+                ),
+              );
+            },
+            title: new Text('金额：${items[index]['money']}'),
+            subtitle: new Text('用途：${items[index]['classification_name']}' +
                 '             ' +
-                '时间：${DateTime.parse(items[index]['RecordDateTime'])}'
+                '时间：${DateTime.parse(items[index]['record_date_time'])}'
                     '                  ' +
-                '备注：${items[index]['Remark']}'),
+                '备注：${items[index]['remark']}'),
           ))),
           itemExtent: 100.0,
           itemCount: items?.length ?? 0,
@@ -137,7 +137,7 @@ class MyHomePageState extends State<MyHomePage> {
     Navigator.push(
       context,
       new MaterialPageRoute(
-        builder: (context) => new AddRecordWidget(title: '新增'),
+        builder: (context) => new AddRecordWidget(code: 'add', title: '新增'),
       ),
     ).then((data) {
       if (mounted) {
