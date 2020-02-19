@@ -1,5 +1,8 @@
+import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
+import 'package:acai_flutter/home/home.dart';
 import 'package:acai_flutter/model/Classification.dart';
 import 'package:acai_flutter/model/MoneyRecord.dart';
 import 'package:acai_flutter/util/DioUtils.dart';
@@ -33,38 +36,51 @@ class AddRecordWidgetState extends State<AddRecordWidget> {
   double money;
   int classificationType;
   List<Classification> classificationList = new List<Classification>();
-  Classification classification;
+  Classification classification = new Classification();
   final format = DateFormat("yyyy-MM-dd");
   DateTime dateTxt;
   MoneyRecord moneyRecord;
 
-  @override
-  void initState() {
+  loadData() async {
+    print("loadData");
     classificationType = 2;
-    findClassification();
-    super.initState();
-  }
-
-  findClassification() async {
-    var url = '/api/classification';
-    var dio = await DioUtils.getDio();
-    var response =
-        await dio.get(url, queryParameters: {"type": classificationType});
-    classificationList.clear();
-    var data = response.data;
-    data["data"].forEach((f) {
-      Classification c = new Classification(f["code"], f["name"]);
-      classificationList.add(c);
-    });
+    var list = await findClassification(classificationType);
     setState(() {
-      classificationList = classificationList;
-      String code = widget.code;
-//      if (code == 'add') {
-      if (classificationList != null && classificationList.length > 0) {
+      classificationList = list;
+      classification = classificationList.elementAt(0);
+    });
+    String code = widget.code;
+    if (code == 'update') {
+      int id = widget.id;
+      var mr = await findMoneyRecordById(id);
+      var picUrl = mr.picUrl;
+      File f = await findImageByUrl(picUrl);
+      setState(() {
+        image = f;
+        moneyRecord = mr;
+        fileName = mr.picUrl;
+        int code = moneyRecord.classificationCode;
+        if (classificationList.length > 0) {
+          classification =
+              classificationList.firstWhere((value) => value.code == code);
+        }
+        classificationType = moneyRecord.type;
+        moneyController.text = moneyRecord.money.toString();
+        dateController.text = moneyRecord.recordDateTime;
+        remarkController.text = moneyRecord.remark;
+      });
+    } else {
+      if (classificationList.length > 0) {
         classification = classificationList.elementAt(0);
       }
-//      }
-    });
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    print("initState");
+    loadData();
   }
 
   saveMoneyRecord() async {
@@ -73,6 +89,7 @@ class AddRecordWidgetState extends State<AddRecordWidget> {
     if (moneyTxt == '' ||
         remarkTxt == '' ||
         moneyTxt == '' ||
+        fileName == '' ||
         dateTxt == null) {
       showToast("请补全信息");
       return;
@@ -116,55 +133,9 @@ class AddRecordWidgetState extends State<AddRecordWidget> {
     });
   }
 
-  findMoneyRecordById(int id) async {
-    var dio = await DioUtils.getDio();
-    var response = await dio.get('/api/moneyRecord/' + id.toString());
-    var data = response.data;
-    var code = data['code'];
-    if (code == 0) {
-      setState(() {
-        moneyRecord = MoneyRecord.fromMap(data['data']);
-        classificationType = moneyRecord.type;
-        classification = new Classification(
-            moneyRecord.classificationCode, moneyRecord.classificationName);
-        moneyController.text = moneyRecord.money.toString();
-        dateController.text = moneyRecord.recordDateTime;
-        remarkController.text = moneyRecord.remark;
-      });
-      findImageByUrl(moneyRecord.picUrl);
-    }
-  }
-
-  findImageByUrl(String picUrl) async {
-    if (picUrl == "") {
-      return;
-    }
-    var dio = await DioUtils.getDio();
-    var response = await dio
-        .get('/api/moneyRecord/download', queryParameters: {"picUrl": picUrl});
-    Directory tempDir = await getTemporaryDirectory();
-    String tempPath = tempDir.path;
-    File file = new File('$tempPath/$picUrl');
-    file
-        .writeAsBytes(Uint8List.fromList(response.data.codeUnits))
-        .then((onValue) {
-      setState(() {
-        image = file;
-      });
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
-    String code = widget.code;
-    if (code == 'update') {
-      int id = widget.id;
-      findMoneyRecordById(id);
-    }
-    // 获取图片
-//    findImageByUrl(moneyRecord.picUrl);
-    print("build:");
-    print(classification.name);
+    print("build");
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
@@ -195,7 +166,7 @@ class AddRecordWidgetState extends State<AddRecordWidget> {
                             setState(() {
                               classificationType = value;
                             });
-                            findClassification();
+                            changeClassification(classificationType);
                           },
                         ),
                       ],
@@ -213,7 +184,7 @@ class AddRecordWidgetState extends State<AddRecordWidget> {
                             setState(() {
                               classificationType = value;
                             });
-                            findClassification();
+                            changeClassification(classificationType);
                           },
                         ),
                       ],
@@ -339,6 +310,19 @@ class AddRecordWidgetState extends State<AddRecordWidget> {
               ),
             ],
           ),
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: new RaisedButton(
+                  child: Text('删除'),
+                  color: Colors.red,
+                  elevation: 1,
+                  highlightElevation: 1,
+                  onPressed: alertDeleteDialog,
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );
@@ -348,7 +332,8 @@ class AddRecordWidgetState extends State<AddRecordWidget> {
     var url = '/api/moneyRecord/upload';
     Dio dio = await DioUtils.getDio();
     FormData formData = FormData.fromMap({
-      "file": await MultipartFile.fromFile(image.path, filename: "xxx.png")
+      "file": await MultipartFile.fromFile(image.path,
+          filename: image.path.split("/").last)
     });
     try {
       var response = await dio.post(url, data: formData);
@@ -365,4 +350,110 @@ class AddRecordWidgetState extends State<AddRecordWidget> {
       showToast('上传失败');
     }
   }
+
+  Future<void> changeClassification(int classificationType) async {
+    var list = await findClassification(classificationType);
+    setState(() {
+      classificationList = list;
+      if (widget.code == 'add') {
+        classification = list.elementAt(0);
+      } else if (widget.code == 'update') {
+        classification = classificationList.firstWhere(
+            (value) => value.code == moneyRecord.classificationCode);
+      }
+    });
+  }
+
+  Future<void> alertDeleteDialog() async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('确认删除吗？'),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Text('类别：' + moneyRecord.classificationName),
+                Text('金额：' + moneyRecord.money.toString()),
+                Text('备注：' + moneyRecord.remark),
+                Text('时间：' + moneyRecord.recordDateTime),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            FlatButton(
+              child: Text('删除'),
+              color: Colors.red,
+              onPressed: deleteMoneyRecord,
+            ),
+            FlatButton(
+              child: Text('取消'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> deleteMoneyRecord() async {
+    var dio = await DioUtils.getDio();
+    var url = "/api/moneyRecord";
+    var response = await dio.delete(url + "/" + widget.id.toString());
+    var data = response.data;
+    var code = data['code'];
+    if (code == 0) {
+      showToast("删除成功");
+      Navigator.push(
+        context,
+        new MaterialPageRoute(
+          builder: (context) => new MyHomePage(),
+        ),
+      );
+    } else {
+      showToast("删除失败");
+    }
+  }
+}
+
+Future<List<Classification>> findClassification(classificationType) async {
+  var url = '/api/classification';
+  var dio = await DioUtils.getDio();
+  var response =
+      await dio.get(url, queryParameters: {"type": classificationType});
+  var classificationList = new List<Classification>();
+  var data = response.data;
+  data["data"].forEach((f) {
+    Classification c = Classification.fromJson(f);
+    classificationList.add(c);
+  });
+  return classificationList;
+}
+
+Future<MoneyRecord> findMoneyRecordById(int id) async {
+  var dio = await DioUtils.getDio();
+  var response = await dio.get('/api/moneyRecord/' + id.toString());
+  var data = response.data;
+  var code = data['code'];
+  var moneyRecord;
+  if (code == 0) {
+    moneyRecord = MoneyRecord.fromMap(data['data']);
+  }
+  return moneyRecord;
+}
+
+Future<File> findImageByUrl(String picUrl) async {
+  if (picUrl == "") {
+    return null;
+  }
+  Directory tempDir = await getTemporaryDirectory();
+  String tempPath = tempDir.path;
+  var dio = await DioUtils.getDio();
+  await dio.download('/api/moneyRecord/download', '$tempPath/$picUrl',
+      queryParameters: {"picUrl": picUrl});
+  File file = new File('$tempPath/$picUrl');
+  return file;
 }
