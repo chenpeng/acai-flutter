@@ -28,6 +28,12 @@ dependencies:
   dio: 3.0.8
   shared_preferences: 0.5.6
   pull_to_refresh: ^1.5.8
+  encrypt: ^4.0.0
+  datetime_picker_formfield: ^1.0.0
+  flutter_localizations:
+    sdk: flutter
+  flutter_cupertino_localizations: ^1.0.1
+  path_provider: ^1.6.0
 
 dev_dependencies:
   flutter_test:
