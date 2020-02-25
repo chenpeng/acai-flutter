@@ -1,5 +1,4 @@
 import 'package:acai_flutter/config/config.dart';
-import 'package:acai_flutter/detail/detail.dart';
 import 'package:acai_flutter/home/home.dart';
 import 'package:acai_flutter/home/login.dart';
 import 'package:acai_flutter/home/splash.dart';
@@ -25,7 +24,6 @@ class MyApp extends StatelessWidget {
           'home': (context) => MyHomePage(
                 title: "阿财",
               ),
-          'detail': (context) => DetailRecordWidget(),
         },
         localizationsDelegates: [
           // ... app-specific localization delegate[s] here
