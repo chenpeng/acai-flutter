@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:acai_flutter/home/home.dart';
@@ -12,8 +11,6 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:oktoast/oktoast.dart';
 import 'package:intl/intl.dart';
-import 'dart:typed_data';
-
 import 'package:path_provider/path_provider.dart';
 
 class AddRecordWidget extends StatefulWidget {
@@ -70,6 +67,7 @@ class AddRecordWidgetState extends State<AddRecordWidget> {
         remarkController.text = moneyRecord.remark;
       });
     } else {
+      dateController.text = DateTime.now().toString();
       if (classificationList.length > 0) {
         classification = classificationList.elementAt(0);
       }

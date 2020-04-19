@@ -1,8 +1,10 @@
 import 'package:acai_flutter/add/add.dart';
+import 'package:acai_flutter/chart/chart.dart';
 import 'package:acai_flutter/util/DioUtils.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
+import 'package:intl/intl.dart';
 
 class MyHomePage extends StatefulWidget {
   MyHomePage({Key key, this.title = '阿财'}) : super(key: key);
@@ -106,15 +108,15 @@ class MyHomePageState extends State<MyHomePage> {
               Navigator.push(
                 context,
                 new MaterialPageRoute(
-                  builder: (context) => new AddRecordWidget(
-                      code: 'update', title: '修改', id: id),
+                  builder: (context) =>
+                      new AddRecordWidget(code: 'update', title: '修改', id: id),
                 ),
               );
             },
             title: new Text('金额：${items[index]['money']}'),
             subtitle: new Text('用途：${items[index]['classification_name']}' +
                 '             ' +
-                '时间：${DateTime.parse(items[index]['record_date_time'])}'
+                '时间：${DateFormat("yyyy-MM-dd").parse(items[index]['record_date_time'].toString())}'
                     '                  ' +
                 '备注：${items[index]['remark']}'),
           ))),
@@ -122,14 +124,32 @@ class MyHomePageState extends State<MyHomePage> {
           itemCount: items?.length ?? 0,
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          navToAdd(context);
-        },
-        tooltip: 'Increment',
-        child: Icon(Icons.add),
+      bottomNavigationBar: BottomAppBar(
+        child: Container(
+          height: 50,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              new RaisedButton(
+                child: Text('报表'),
+                elevation: 1,
+                highlightElevation: 1,
+                onPressed: () {
+                  navToChart(context);
+                },
+              ),
+              new RaisedButton(
+                child: Text('新增'),
+                elevation: 1,
+                highlightElevation: 1,
+                onPressed: () {
+                  navToAdd(context);
+                },
+              ),
+            ],
+          ),
+        ),
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
 
@@ -138,6 +158,19 @@ class MyHomePageState extends State<MyHomePage> {
       context,
       new MaterialPageRoute(
         builder: (context) => new AddRecordWidget(code: 'add', title: '新增'),
+      ),
+    ).then((data) {
+      if (mounted) {
+        onRefresh();
+      }
+    });
+  }
+
+  void navToChart(BuildContext context) async {
+    Navigator.push(
+      context,
+      new MaterialPageRoute(
+        builder: (context) => new ChartPage(title: '报表'),
       ),
     ).then((data) {
       if (mounted) {
