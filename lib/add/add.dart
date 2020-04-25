@@ -123,7 +123,14 @@ class AddRecordWidgetState extends State<AddRecordWidget> {
   }
 
   Future openCamera() async {
-//    var image = await ImagePicker.pickImage(source: ImageSource.camera);
+    var file = await ImagePicker.pickImage(source: ImageSource.camera);
+    upLoadImage(file);
+    setState(() {
+      image = file;
+    });
+  }
+
+  Future openGallery() async {
     var file = await ImagePicker.pickImage(source: ImageSource.gallery);
     upLoadImage(file);
     setState(() {
@@ -278,10 +285,18 @@ class AddRecordWidgetState extends State<AddRecordWidget> {
             children: <Widget>[
               Expanded(
                 child: new RaisedButton(
-                  child: Text('上传图片'),
+                  child: Text('拍照'),
                   elevation: 1,
                   highlightElevation: 1,
                   onPressed: openCamera,
+                ),
+              ),
+              Expanded(
+                child: new RaisedButton(
+                  child: Text('相册'),
+                  elevation: 1,
+                  highlightElevation: 1,
+                  onPressed: openGallery,
                 ),
               ),
             ],
