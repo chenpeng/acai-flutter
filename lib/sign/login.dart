@@ -2,7 +2,6 @@ import 'package:acai_flutter/home/home.dart';
 import 'package:acai_flutter/util/DioUtils.dart';
 import 'package:encrypt/encrypt.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
 
 import 'package:oktoast/oktoast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -21,14 +20,17 @@ class LoginState extends State<Login> {
   final TextEditingController nicknameController = new TextEditingController();
   final TextEditingController passwordController = new TextEditingController();
   var publicKey;
+  var password;
 
   @override
   void initState() {
+    print('login initState');
     super.initState();
     getPublicKey();
   }
 
   getPublicKey() async {
+    print('login getPublicKey');
     var url = '/api/oauth/publicKey';
     var dio = await DioUtils.getDio();
     var response = await dio.get(url);
@@ -89,7 +91,7 @@ class LoginState extends State<Login> {
       prefs.setString("accessToken", data['data']);
       Navigator.push(
         context,
-        new MaterialPageRoute(
+        new CupertinoPageRoute(
           builder: (context) => new MyHomePage(title: '阿财'),
         ),
       );
@@ -101,81 +103,83 @@ class LoginState extends State<Login> {
 
   @override
   Widget build(BuildContext context) {
+    print('login build');
     DioUtils.ctx = context;
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("登录注册"),
+    return CupertinoPageScaffold(
+      resizeToAvoidBottomInset: false,
+      navigationBar: CupertinoNavigationBar(
+        middle: Text("登录注册"),
         automaticallyImplyLeading: false,
       ),
-      body: Column(
-        children: <Widget>[
-          Row(
-            children: <Widget>[
-              Expanded(
-                child: TextField(
+      child: SafeArea(
+        child: Column(
+          children: <Widget>[
+            Row(
+              children: <Widget>[
+                Expanded(
+                  child: CupertinoTextField(
                     controller: usernameController,
-                    decoration: InputDecoration(
-                      border: OutlineInputBorder(),
-                      labelText: '账号',
-                    )),
-              ),
-            ],
-          ),
-          Row(
-            children: <Widget>[
-              Expanded(
-                child: TextField(
+                    placeholder: '账号',
+                    prefix: Icon(CupertinoIcons.person_solid),
+                  ),
+                ),
+              ],
+            ),
+            Row(
+              children: <Widget>[
+                Expanded(
+                  child: CupertinoTextField(
                     controller: nicknameController,
-                    decoration: InputDecoration(
-                      border: OutlineInputBorder(),
-                      labelText: '昵称',
-                    )),
-              ),
-            ],
-          ),
-          Row(
-            children: <Widget>[
-              Expanded(
-                child: TextField(
+                    placeholder: '昵称',
+                    prefix: Icon(CupertinoIcons.profile_circled),
+                  ),
+                ),
+              ],
+            ),
+            Row(
+              children: <Widget>[
+                Expanded(
+                  child: CupertinoTextField(
                     controller: passwordController,
-                    decoration: InputDecoration(
-                      border: OutlineInputBorder(),
-                      labelText: '密码',
-                    )),
-              ),
-            ],
-          ),
-          Row(
-            children: <Widget>[
-              RaisedButton(
-                child: Text('登录'),
-                elevation: 1,
-                highlightElevation: 1,
-                onPressed: signIn,
-              )
-            ],
-          ),
-          Row(
-            children: <Widget>[
-              RaisedButton(
-                child: Text('获取公钥'),
-                elevation: 1,
-                highlightElevation: 1,
-                onPressed: getPublicKey,
-              )
-            ],
-          ),
-          Row(
-            children: <Widget>[
-              RaisedButton(
-                child: Text('注册'),
-                elevation: 1,
-                highlightElevation: 1,
-                onPressed: signUp,
-              )
-            ],
-          ),
-        ],
+                    placeholder: '密码',
+                    prefix: Icon(CupertinoIcons.padlock),
+                    enabled: true,
+                    onChanged: (value) {
+                      setState(() {
+                        password = value;
+                      });
+                    },
+                    keyboardType: TextInputType.multiline,
+                  ),
+                ),
+              ],
+            ),
+            Row(
+              children: <Widget>[
+                CupertinoButton(
+                  child: Text('登录'),
+                  onPressed: signIn,
+                )
+              ],
+            ),
+            Row(
+              children: <Widget>[
+                CupertinoButton(
+                  child: Text('获取公钥'),
+                  onPressed: getPublicKey,
+                )
+              ],
+            ),
+            Row(
+              children: <Widget>[
+                CupertinoButton(
+                  child: Text('注册'),
+                  onPressed: signUp,
+                )
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

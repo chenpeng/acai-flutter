@@ -10,13 +10,15 @@ class SplashPage extends StatefulWidget {
 class SplashPageState extends State<SplashPage> {
   @override
   void initState() {
+    print('splash initState');
     super.initState();
     DioUtils.checkAccessToken();
   }
 
   @override
   Widget build(BuildContext context) {
+    print('splash build');
     DioUtils.ctx = context;
-    return new Material();
+    return Container();
   }
 }
