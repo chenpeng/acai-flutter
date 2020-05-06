@@ -11,14 +11,25 @@ class MoneyChartPage extends StatefulWidget {
 }
 
 class MoneyChartState extends State<MoneyChartPage> {
+  List yearList = [2020];
+  List monthList = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+
+  // "类型"数据源(写死)
+  var classificationTypeMap = {1: Text('收入'), 2: Text('支出')};
+
+  // param classificationType
+  int classificationType = 2;
   List items = new List();
   int year = DateTime.now().year;
-  int month = DateTime.now().month - 1;
+  int month = DateTime.now().month;
 
   findMoneyRecordChartList() async {
     var dio = await DioUtils.getDio();
-    var response = await dio
-        .get('/api/chart', queryParameters: {'year': year, 'month': month});
+    var response = await dio.get('/api/chart', queryParameters: {
+      'year': year,
+      'month': month,
+      'classificationType': classificationType
+    });
     var data = response.data;
     if (data['data'] != null && data['data'].length > 0) {
       setState(() {
@@ -31,14 +42,24 @@ class MoneyChartState extends State<MoneyChartPage> {
     }
   }
 
+  changeClassification(int classificationType) async {
+    // 更新UI
+    setState(() {
+      classificationType = classificationType;
+    });
+    findMoneyRecordChartList();
+  }
+
   @override
   void initState() {
+    print('money_chart initState');
     super.initState();
     findMoneyRecordChartList();
   }
 
   @override
   Widget build(BuildContext context) {
+    print('money_chart build');
     return CupertinoPageScaffold(
       navigationBar: CupertinoNavigationBar(
         middle: Text(widget.title),
@@ -53,8 +74,12 @@ class MoneyChartState extends State<MoneyChartPage> {
                     height: 30,
                     child: CupertinoPicker(
                       itemExtent: 30.0,
-                      onSelectedItemChanged: (index) {},
-                      children: [2020].map((e) => Text(e.toString())).toList(),
+                      onSelectedItemChanged: (index) {
+                        month = monthList[index];
+                        findMoneyRecordChartList();
+                      },
+                      children:
+                          yearList.map((e) => Text(e.toString())).toList(),
                     ),
                   ),
                 ),
@@ -63,11 +88,32 @@ class MoneyChartState extends State<MoneyChartPage> {
                     height: 30,
                     child: CupertinoPicker(
                       itemExtent: 30.0,
-                      onSelectedItemChanged: (index) {},
-                      children: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
-                          .map((e) => Text(e.toString()))
-                          .toList(),
+                      onSelectedItemChanged: (index) {
+                        month = monthList[index];
+                        findMoneyRecordChartList();
+                      },
+                      children:
+                          monthList.map((e) => Text(e.toString())).toList(),
                     ),
+                  ),
+                ),
+              ],
+            ),
+            Row(
+              children: [
+                Text('类型：'),
+                Container(
+                  height: 60,
+                  child: CupertinoSegmentedControl(
+                    padding: EdgeInsets.all(10),
+                    children: classificationTypeMap,
+                    onValueChanged: (value) {
+                      classificationType = value;
+                      changeClassification(classificationType);
+                    },
+                    groupValue: classificationType,
+                    unselectedColor: CupertinoColors.white,
+                    selectedColor: CupertinoColors.activeBlue,
                   ),
                 ),
               ],

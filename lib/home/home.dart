@@ -4,10 +4,23 @@ import 'package:acai_flutter/record/money_record.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-class MyHomePage extends StatelessWidget {
-  MyHomePage({Key key, this.title = '阿财'}) : super(key: key);
+class HomePage extends StatefulWidget {
+  HomePage({Key key, this.title = '阿财'}) : super(key: key);
 
   final String title;
+
+  @override
+  State<StatefulWidget> createState() => new HomeState();
+}
+
+class HomeState extends State<HomePage> {
+  int currentTabIndex = 0;
+
+  @override
+  void initState() {
+    print('home initState');
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,31 +43,31 @@ class MyHomePage extends StatelessWidget {
           ],
         ),
         tabBuilder: (BuildContext context, int index) {
-          return CupertinoTabView(
-            builder: (BuildContext context) {
-              switch (index) {
-                case 0:
-                  return MoneyRecordPage(
-                    title: '账单',
-                  );
-                  break;
-                case 1:
-                  return AttachMoneyPage(
-                    title: '记账',
-                    code: 'add',
-                  );
-                  break;
-                case 2:
-                  return MoneyChartPage(
-                    title: '报表',
-                  );
-                  break;
-              }
-              return AttachMoneyPage(
-                title: '记账',
+          switch (index) {
+            case 0:
+              return CupertinoTabView(
+                builder: (BuildContext context) => MoneyRecordPage(
+                  title: '账单',
+                ),
               );
-            },
-          );
+              break;
+            case 1:
+              return CupertinoTabView(
+                builder: (BuildContext context) => AttachMoneyPage(
+                  title: '记账',
+                  code: 'add',
+                ),
+              );
+              break;
+            case 2:
+              return CupertinoTabView(
+                builder: (BuildContext context) => MoneyChartPage(
+                  title: '报表',
+                ),
+              );
+              break;
+          }
+          return null;
         });
   }
 }

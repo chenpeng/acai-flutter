@@ -9,7 +9,6 @@ import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:oktoast/oktoast.dart';
-import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 
 class AttachMoneyPage extends StatefulWidget {
@@ -24,126 +23,91 @@ class AttachMoneyPage extends StatefulWidget {
 }
 
 class AttachMoneyState extends State<AttachMoneyPage> {
-  final TextEditingController moneyController = new TextEditingController();
-  final TextEditingController remarkController = new TextEditingController();
-  final TextEditingController dateController = new TextEditingController();
-  final FixedExtentScrollController classificationController =
-      new FixedExtentScrollController();
-  File image;
-  String fileName;
-  double money;
-  int classificationType;
+  // "类型"数据源(写死)
+  var classificationTypeMap = {1: Text('收入'), 2: Text('支出')};
+
+  // "分类"数据源（接口获取）
   List<Classification> classificationList = new List<Classification>();
-  Classification classification = new Classification();
-  final format = DateFormat("yyyy-MM-dd");
-  DateTime dateTxt;
+
+  // "记录"数据源（接口获取）
   MoneyRecord moneyRecord;
+
+  // param classificationType
+  int classificationType = 2;
+
+  // param classification（新增时，取classificationList第一个。更新时，从接口获取对应的。）
+  Classification classification = new Classification();
+
+  // param recordDateTime
+  DateTime recordDateTime = DateTime.now();
+
+  // param money
+  double money;
+
+  // param remark
+  String remark;
+
+  // param fileName
+  String fileName;
+  File image;
+
+  // 控制是否显示删除按钮
+  bool hideDeleteBtn = true;
 
   loadData() async {
     print("attach_money loadData");
-    classificationType = 2;
     var list = await findClassification(classificationType);
-    setState(() {
-      classificationList = list;
-      classification = classificationList.elementAt(0);
-    });
+//    setState(() {
+    classificationList = list;
+//      classification = classificationList.elementAt(0);
+//    });
     String code = widget.code;
     if (code == 'update') {
       int id = widget.id;
       var mr = await findMoneyRecordById(id);
       var picUrl = mr.picUrl;
-      File f = await findImageByUrl(picUrl);
-      setState(() {
-        image = f;
-        moneyRecord = mr;
-        fileName = mr.picUrl;
-        int code = moneyRecord.classificationCode;
-        if (classificationList.length > 0) {
-          classification =
-              classificationList.firstWhere((value) => value.code == code);
-        }
-        classificationType = moneyRecord.type;
-        moneyController.text = moneyRecord.money.toString();
-        dateController.text = moneyRecord.recordDateTime;
-        remarkController.text = moneyRecord.remark;
-      });
+      image = await findImageByUrl(picUrl);
+//      setState(() {
+      moneyRecord = mr;
+      fileName = mr.picUrl;
+      int code = moneyRecord.classificationCode;
+      if (classificationList.length > 0) {
+        classification =
+            classificationList.firstWhere((value) => value.code == code);
+      }
+      classificationType = moneyRecord.type;
+      money = moneyRecord.money;
+      recordDateTime = DateTime.parse(moneyRecord.recordDateTime);
+      remark = moneyRecord.remark;
+//      });
     } else {
-      dateTxt = DateTime.now();
+      recordDateTime = DateTime.now();
       if (classificationList.length > 0) {
         classification = classificationList.elementAt(0);
       }
     }
+    // 更新UI
+    setState(() {
+
+    });
   }
 
   @override
   void initState() {
-    classificationType = 2;
+//    classificationType = 2;
     super.initState();
     print("attach_money initState");
     loadData();
-  }
-
-  saveMoneyRecord() async {
-    String moneyTxt = moneyController.text;
-    String remarkTxt = remarkController.text;
-    if (moneyTxt == '' ||
-        remarkTxt == '' ||
-        moneyTxt == '' ||
-        fileName == '' ||
-        dateTxt == null) {
-      showToast("请补全信息");
-      return;
+    if (widget.code == 'update') {
+      hideDeleteBtn = false;
     }
-    money = double.parse(moneyTxt);
-
-    var url = '/api/moneyRecord';
-    var dio = await DioUtils.getDio();
-    var param = {
-      'classification_code': classification.code,
-      'classification_name': classification.name,
-      'record_date_time': dateTxt.toString(),
-      'money': money,
-      'type': classificationType,
-      'remark': remarkTxt,
-      'pic_url': fileName,
-    };
-    var response;
-    if (widget.code == 'add') {
-      response = await dio.post(url, data: param);
-    } else if (widget.code == 'update') {
-      response = await dio.put(url + "/" + widget.id.toString(), data: param);
-    }
-    var data = response.data;
-    var code = data['code'];
-    var msg = data['message'];
-    if (code == 0) {
-      Navigator.of(context).pushNamed("home", arguments: "hi");
-      showToast(msg);
-    } else {
-      showToast(msg);
-    }
-  }
-
-  Future openCamera() async {
-    var file = await ImagePicker.pickImage(source: ImageSource.camera);
-    upLoadImage(file);
-    setState(() {
-      image = file;
-    });
-  }
-
-  Future openGallery() async {
-    var file = await ImagePicker.pickImage(source: ImageSource.gallery);
-    upLoadImage(file);
-    setState(() {
-      image = file;
-    });
   }
 
   @override
   Widget build(BuildContext context) {
     print("attach_money build");
     return CupertinoPageScaffold(
+      resizeToAvoidBottomInset: false,
       navigationBar: CupertinoNavigationBar(
         middle: Text(widget.title),
       ),
@@ -153,17 +117,19 @@ class AttachMoneyState extends State<AttachMoneyPage> {
             Row(
               children: [
                 Text('类型：'),
-                CupertinoSegmentedControl(
-                  children: {1: Text('收入'), 2: Text('支出')},
-                  onValueChanged: (value) {
-                    setState(() {
+                Container(
+                  height: 60,
+                  child: CupertinoSegmentedControl(
+                    padding: EdgeInsets.all(10),
+                    children: classificationTypeMap,
+                    onValueChanged: (value) {
                       classificationType = value;
-                    });
-                    changeClassification(classificationType);
-                  },
-                  groupValue: classificationType,
-                  unselectedColor: CupertinoColors.white,
-                  selectedColor: CupertinoColors.activeBlue,
+                      changeClassification(classificationType);
+                    },
+                    groupValue: classificationType,
+                    unselectedColor: CupertinoColors.white,
+                    selectedColor: CupertinoColors.activeBlue,
+                  ),
                 ),
               ],
             ),
@@ -172,18 +138,12 @@ class AttachMoneyState extends State<AttachMoneyPage> {
                 Text("用途："),
                 Expanded(
                   child: Container(
-                    height: 30,
-                    child: CupertinoPicker(
-                      scrollController: classificationController,
-                      itemExtent: 30.0,
-                      onSelectedItemChanged: (index) {
-                        setState(() {
-                          classification = classificationList[index];
-                        });
+                    height: 60,
+                    child: CupertinoButton(
+                      onPressed: () {
+                        showClassificationPicker(context);
                       },
-                      children: classificationList.map((Classification map) {
-                        return Text(map.name);
-                      }).toList(),
+                      child: Text(classification?.name == null ? '':classification.name),
                     ),
                   ),
                 ),
@@ -194,15 +154,16 @@ class AttachMoneyState extends State<AttachMoneyPage> {
                 Text("时间："),
                 Expanded(
                   child: Container(
-                    height: 30,
-                    child: CupertinoDatePicker(
-                      mode: CupertinoDatePickerMode.date,
-                      use24hFormat: true,
-                      onDateTimeChanged: (value) {
-                        setState(() {
-                          dateTxt = value;
-                        });
+                    height: 60,
+                    child: CupertinoButton(
+                      onPressed: () {
+                        showRecordDatePicker(context);
                       },
+                      child: Text(recordDateTime.year.toString() +
+                          '-' +
+                          recordDateTime.month.toString() +
+                          '-' +
+                          recordDateTime.day.toString()),
                     ),
                   ),
                 ),
@@ -213,7 +174,11 @@ class AttachMoneyState extends State<AttachMoneyPage> {
                 Text("金额："),
                 Expanded(
                   child: CupertinoTextField(
-                    controller: moneyController,
+                    padding: EdgeInsets.all(10.0),
+                    controller: TextEditingController(text: money?.toString()),
+                    onChanged: (value) {
+                      money = double.parse(value);
+                    },
                   ),
                 ),
               ],
@@ -223,7 +188,11 @@ class AttachMoneyState extends State<AttachMoneyPage> {
                 Text("备注："),
                 Expanded(
                   child: CupertinoTextField(
-                    controller: remarkController,
+                    padding: EdgeInsets.all(10.0),
+                    controller: TextEditingController(text: remark?.toString()),
+                    onChanged: (value) {
+                      remark = value;
+                    },
                   ),
                 ),
               ],
@@ -231,9 +200,11 @@ class AttachMoneyState extends State<AttachMoneyPage> {
             Row(
               children: <Widget>[
                 Expanded(
-                  child: image == null
-                      ? Text('木有照片')
-                      : Image.file(image, width: 100, height: 100),
+                  child: Center(
+                    child: image == null
+                        ? Text('木有照片')
+                        : Image.file(image, width: 100, height: 100),
+                  ),
                 ),
               ],
             ),
@@ -263,16 +234,21 @@ class AttachMoneyState extends State<AttachMoneyPage> {
               children: <Widget>[
                 Expanded(
                   child: new CupertinoButton(
-                    child: Text('确定'),
+                    child: Text(
+                      '确定',
+                    ),
                     onPressed: saveMoneyRecord,
                   ),
                 ),
                 Expanded(
                   child: new CupertinoButton(
-                    child: Text('取消'),
+                    child: Text(
+                      '取消',
+                      style: TextStyle(color: CupertinoColors.systemRed),
+                    ),
                     onPressed: () {
-                      Navigator.of(context).push(CupertinoPageRoute(
-                        builder: (context) => new MyHomePage(title: '阿财'),
+                      Navigator.of(context,rootNavigator: true,).push(CupertinoPageRoute(
+                        builder: (context) => new HomePage(title: '阿财'),
                       ));
                     },
                   ),
@@ -282,10 +258,13 @@ class AttachMoneyState extends State<AttachMoneyPage> {
             Row(
               children: <Widget>[
                 Expanded(
-                  child: new CupertinoButton(
-                    child: Text('删除'),
-                    color: CupertinoColors.destructiveRed,
-                    onPressed: alertDeleteDialog,
+                  child: Offstage(
+                    offstage: hideDeleteBtn,
+                    child: CupertinoButton(
+                      child: Text('删除'),
+                      color: CupertinoColors.systemRed,
+                      onPressed: alertDeleteDialog,
+                    ),
                   ),
                 ),
               ],
@@ -294,6 +273,59 @@ class AttachMoneyState extends State<AttachMoneyPage> {
         ),
       ),
     );
+  }
+
+  saveMoneyRecord() async {
+    if (money == 0.0 ||
+        remark == '' ||
+        fileName == '' ||
+        recordDateTime == null) {
+      showToast("请补全信息");
+      return;
+    }
+
+    var url = '/api/moneyRecord';
+    var dio = await DioUtils.getDio();
+    var param = {
+      'classification_code': classification.code,
+      'classification_name': classification.name,
+      'record_date_time': recordDateTime.toString(),
+      'money': money,
+      'type': classificationType,
+      'remark': remark,
+      'pic_url': fileName,
+    };
+    var response;
+    if (widget.code == 'add') {
+      response = await dio.post(url, data: param);
+    } else if (widget.code == 'update') {
+      response = await dio.put(url + "/" + widget.id.toString(), data: param);
+    }
+    var data = response.data;
+    var code = data['code'];
+    var msg = data['message'];
+    if (code == 0) {
+      Navigator.of(context,rootNavigator: true,).pushNamed("home", arguments: "hi");
+      showToast(msg);
+    } else {
+      showToast(msg);
+    }
+  }
+
+  Future openCamera() async {
+    var file = await ImagePicker.pickImage(source: ImageSource.camera);
+    upLoadImage(file);
+    setState(() {
+      image = file;
+    });
+  }
+
+  Future openGallery() async {
+    var file = await ImagePicker.pickImage(source: ImageSource.gallery);
+    upLoadImage(file);
+    setState(() {
+      image = file;
+    });
   }
 
   upLoadImage(File image) async {
@@ -320,7 +352,10 @@ class AttachMoneyState extends State<AttachMoneyPage> {
   }
 
   Future<void> changeClassification(int classificationType) async {
+    print('classificationType:' + classificationType.toString());
+    // 根据"类型"，获取数据。
     var list = await findClassification(classificationType);
+    // 更新UI
     setState(() {
       classificationList = list;
       if (widget.code == 'add') {
@@ -371,12 +406,55 @@ class AttachMoneyState extends State<AttachMoneyPage> {
       Navigator.push(
         context,
         new CupertinoPageRoute(
-          builder: (context) => new MyHomePage(),
+          builder: (context) => new HomePage(),
         ),
       );
     } else {
       showToast("删除失败");
     }
+  }
+
+  showClassificationPicker(BuildContext context) {
+    final picker = CupertinoPicker(
+      backgroundColor: CupertinoColors.white,
+      itemExtent: 35.0,
+      onSelectedItemChanged: (index) {
+        classification = classificationList[index];
+      },
+      children: classificationList.map((Classification map) {
+        return Text(map.name);
+      }).toList(),
+    );
+    showCupertinoModalPopup(
+      context: context,
+      builder: (context) {
+        return Container(
+          height: 200,
+          child: picker,
+        );
+      },
+    );
+  }
+
+  // 时间选择器
+  showRecordDatePicker(BuildContext context) {
+    final picker = CupertinoDatePicker(
+      backgroundColor: CupertinoColors.white,
+      mode: CupertinoDatePickerMode.date,
+      use24hFormat: true,
+      onDateTimeChanged: (value) {
+        recordDateTime = value;
+      },
+    );
+    showCupertinoModalPopup(
+      context: context,
+      builder: (context) {
+        return Container(
+          height: 200,
+          child: picker,
+        );
+      },
+    );
   }
 }
 

@@ -92,7 +92,7 @@ class LoginState extends State<Login> {
       Navigator.push(
         context,
         new CupertinoPageRoute(
-          builder: (context) => new MyHomePage(title: '阿财'),
+          builder: (context) => new HomePage(title: '阿财'),
         ),
       );
     } else {

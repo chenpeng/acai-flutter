@@ -22,7 +22,7 @@ class MyApp extends StatelessWidget {
         routes: {
           'login': (context) => Login(),
           'splash': (context) => SplashPage(),
-          'home': (context) => MyHomePage(
+          'home': (context) => HomePage(
                 title: "阿财",
               ),
         },
