@@ -53,6 +53,10 @@ class MoneyRecordState extends State<MoneyRecordPage> {
       setState(() {
         items = list;
       });
+    }else{
+      setState(() {
+        items = new List();
+      });
     }
   }
 
@@ -146,10 +150,14 @@ class MoneyRecordState extends State<MoneyRecordPage> {
                       itemCount: items?.length ?? 0,
                       shrinkWrap: true,
                       itemBuilder: (context, index) => Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('时间：${items[index].recordDateStr}  ' +
-                              '收入：+${items[index].incomeMoney}  ' +
-                              '支出：-${items[index].payMoney}'),
+                          Text(
+                            '时间：${items[index].recordDateStr}  ' +
+                                '收入：+${items[index].incomeMoney}  ' +
+                                '支出：-${items[index].payMoney}',
+                            style: TextStyle(fontSize: 15),
+                          ),
                           ListView.builder(
                             physics: new NeverScrollableScrollPhysics(),
                             itemCount: items[index].list?.length ?? 0,
@@ -159,10 +167,18 @@ class MoneyRecordState extends State<MoneyRecordPage> {
                                 navToUpdate(
                                     context, items[index].list[index2]['id']);
                               },
-                              child: Text(
-                                  '金额：${items[index].list[index2]['money']}  ' +
-                                      '用途：${items[index].list[index2]['classification_name']}  ' +
-                                      '备注：${items[index].list[index2]['remark']}'),
+                              child: Row(
+                                children: [
+                                  Text(
+                                    '${items[index].list[index2]['classification_name']}',
+                                    textAlign: TextAlign.left,
+                                  ),
+                                  Text(
+                                    '${items[index].list[index2]['type'] == 1 ? '+' : '-'}${items[index].list[index2]['money']}',
+                                    textAlign: TextAlign.right,
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ],

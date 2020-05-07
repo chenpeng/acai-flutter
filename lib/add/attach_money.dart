@@ -56,18 +56,13 @@ class AttachMoneyState extends State<AttachMoneyPage> {
 
   loadData() async {
     print("attach_money loadData");
-    var list = await findClassification(classificationType);
-//    setState(() {
-    classificationList = list;
-//      classification = classificationList.elementAt(0);
-//    });
     String code = widget.code;
     if (code == 'update') {
       int id = widget.id;
       var mr = await findMoneyRecordById(id);
       var picUrl = mr.picUrl;
       image = await findImageByUrl(picUrl);
-//      setState(() {
+      classificationList = await findClassification(mr.type);
       moneyRecord = mr;
       fileName = mr.picUrl;
       int code = moneyRecord.classificationCode;
@@ -79,22 +74,19 @@ class AttachMoneyState extends State<AttachMoneyPage> {
       money = moneyRecord.money;
       recordDateTime = DateTime.parse(moneyRecord.recordDateTime);
       remark = moneyRecord.remark;
-//      });
     } else {
+      classificationList = await findClassification(classificationType);
       recordDateTime = DateTime.now();
       if (classificationList.length > 0) {
         classification = classificationList.elementAt(0);
       }
     }
     // 更新UI
-    setState(() {
-
-    });
+    setState(() {});
   }
 
   @override
   void initState() {
-//    classificationType = 2;
     super.initState();
     print("attach_money initState");
     loadData();
@@ -143,7 +135,9 @@ class AttachMoneyState extends State<AttachMoneyPage> {
                       onPressed: () {
                         showClassificationPicker(context);
                       },
-                      child: Text(classification?.name == null ? '':classification.name),
+                      child: Text(classification?.name == null
+                          ? ''
+                          : classification.name),
                     ),
                   ),
                 ),
@@ -247,7 +241,10 @@ class AttachMoneyState extends State<AttachMoneyPage> {
                       style: TextStyle(color: CupertinoColors.systemRed),
                     ),
                     onPressed: () {
-                      Navigator.of(context,rootNavigator: true,).push(CupertinoPageRoute(
+                      Navigator.of(
+                        context,
+                        rootNavigator: true,
+                      ).push(CupertinoPageRoute(
                         builder: (context) => new HomePage(title: '阿财'),
                       ));
                     },
@@ -263,7 +260,9 @@ class AttachMoneyState extends State<AttachMoneyPage> {
                     child: CupertinoButton(
                       child: Text('删除'),
                       color: CupertinoColors.systemRed,
-                      onPressed: alertDeleteDialog,
+                      onPressed: (){
+                        alertDeleteDialog();
+                      },
                     ),
                   ),
                 ),
@@ -305,7 +304,10 @@ class AttachMoneyState extends State<AttachMoneyPage> {
     var code = data['code'];
     var msg = data['message'];
     if (code == 0) {
-      Navigator.of(context,rootNavigator: true,).pushNamed("home", arguments: "hi");
+      Navigator.of(
+        context,
+        rootNavigator: true,
+      ).pushNamed("home", arguments: "hi");
       showToast(msg);
     } else {
       showToast(msg);
@@ -367,35 +369,40 @@ class AttachMoneyState extends State<AttachMoneyPage> {
     });
   }
 
-  Future<void> alertDeleteDialog() async {
-    return CupertinoAlertDialog(
-      title: Text('确认删除吗？'),
-      content: SingleChildScrollView(
-        child: ListBody(
-          children: <Widget>[
-            Text('类别：' + moneyRecord.classificationName),
-            Text('金额：' + moneyRecord.money.toString()),
-            Text('备注：' + moneyRecord.remark),
-            Text('时间：' + moneyRecord.recordDateTime),
-          ],
+  alertDeleteDialog() {
+    print("alertDeleteDialog");
+    showCupertinoDialog(context:context,builder: (BuildContext context){
+      return CupertinoAlertDialog(
+        title: Text('确认删除吗？'),
+        content: SingleChildScrollView(
+          child: ListBody(
+            children: <Widget>[
+              Text('类别：' + moneyRecord.classificationName),
+              Text('金额：' + moneyRecord.money.toString()),
+              Text('备注：' + moneyRecord.remark),
+              Text('时间：' + moneyRecord.recordDateTime),
+            ],
+          ),
         ),
-      ),
-      actions: <Widget>[
-        CupertinoDialogAction(
-          child: Text('取消'),
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-        ),
-        CupertinoDialogAction(
-          child: Text('删除'),
-          onPressed: deleteMoneyRecord,
-        ),
-      ],
-    );
+        actions: <Widget>[
+          CupertinoDialogAction(
+            child: Text('取消'),
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+          ),
+          CupertinoDialogAction(
+            child: Text('删除'),
+            onPressed: (){
+              deleteMoneyRecord();
+            },
+          ),
+        ],
+      );
+    });
   }
 
-  Future<void> deleteMoneyRecord() async {
+  deleteMoneyRecord() async {
     var dio = await DioUtils.getDio();
     var url = "/api/moneyRecord";
     var response = await dio.delete(url + "/" + widget.id.toString());
@@ -403,8 +410,10 @@ class AttachMoneyState extends State<AttachMoneyPage> {
     var code = data['code'];
     if (code == 0) {
       showToast("删除成功");
-      Navigator.push(
+      Navigator.of(
         context,
+        rootNavigator: true,
+      ).push(
         new CupertinoPageRoute(
           builder: (context) => new HomePage(),
         ),
