@@ -75,7 +75,7 @@ class MoneyChartState extends State<MoneyChartPage> {
                     child: CupertinoPicker(
                       itemExtent: 30.0,
                       onSelectedItemChanged: (index) {
-                        month = monthList[index];
+                        year = yearList[index];
                         findMoneyRecordChartList();
                       },
                       children:
@@ -87,6 +87,8 @@ class MoneyChartState extends State<MoneyChartPage> {
                   child: Container(
                     height: 30,
                     child: CupertinoPicker(
+                      scrollController:
+                      FixedExtentScrollController(initialItem: month - 1),
                       itemExtent: 30.0,
                       onSelectedItemChanged: (index) {
                         month = monthList[index];
