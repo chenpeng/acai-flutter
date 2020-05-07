@@ -2,6 +2,7 @@ import 'package:acai_flutter/add/attach_money.dart';
 import 'package:acai_flutter/model/MoneyRecordDto.dart';
 import 'package:acai_flutter/util/DioUtils.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import "package:collection/collection.dart";
 
@@ -53,7 +54,7 @@ class MoneyRecordState extends State<MoneyRecordPage> {
       setState(() {
         items = list;
       });
-    }else{
+    } else {
       setState(() {
         items = new List();
       });
@@ -73,8 +74,33 @@ class MoneyRecordState extends State<MoneyRecordPage> {
           payMoney += element['money'];
         }
       });
+      var weekday = DateTime.parse(key).weekday;
+      var weekStr = "";
+      switch(weekday){
+        case 1:
+          weekStr = "星期一";
+          break;
+        case 2:
+          weekStr = "星期二";
+          break;
+        case 3:
+          weekStr = "星期三";
+          break;
+        case 4:
+          weekStr = "星期四";
+          break;
+        case 5:
+          weekStr = "星期五";
+          break;
+        case 6:
+          weekStr = "星期六";
+          break;
+        case 7:
+          weekStr = "星期日";
+          break;
+      }
       MoneyRecordDto moneyRecordDto =
-          new MoneyRecordDto(key, payMoney, incomeMoney, value);
+          new MoneyRecordDto(key, weekStr, payMoney, incomeMoney, value);
       list.add(moneyRecordDto);
     });
     return list;
@@ -139,26 +165,41 @@ class MoneyRecordState extends State<MoneyRecordPage> {
                   ),
                   Expanded(
                     child: Text('支出：-$totalPayMoney'),
-                  )
+                  ),
                 ],
               ),
               Row(
                 children: [
                   Expanded(
-                    child: ListView.builder(
-                      padding: EdgeInsets.all(20),
+                    child: ListView.separated(
+                      separatorBuilder: (context, index) => Divider(
+                          color: CupertinoColors.systemRed, height: 10.0),
+                      physics: new NeverScrollableScrollPhysics(),
+                      padding: EdgeInsets.all(30),
                       itemCount: items?.length ?? 0,
                       shrinkWrap: true,
                       itemBuilder: (context, index) => Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            '时间：${items[index].recordDateStr}  ' +
-                                '收入：+${items[index].incomeMoney}  ' +
-                                '支出：-${items[index].payMoney}',
-                            style: TextStyle(fontSize: 15),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                '${items[index].recordDateStr}  ${items[index].weekStr}  ',
+                                style: TextStyle(fontSize: 15),
+                              ),
+                              Text(
+                                '收入:+${items[index].incomeMoney}  ' +
+                                    '支出:-${items[index].payMoney}',
+                                style: TextStyle(fontSize: 15),
+                              ),
+                            ],
                           ),
-                          ListView.builder(
+                          Divider(color: CupertinoColors.white, height: 10.0),
+                          ListView.separated(
+                            separatorBuilder: (context, index) => Divider(
+                                color: CupertinoColors.activeBlue,
+                                height: 30.0),
                             physics: new NeverScrollableScrollPhysics(),
                             itemCount: items[index].list?.length ?? 0,
                             shrinkWrap: true,
@@ -168,14 +209,14 @@ class MoneyRecordState extends State<MoneyRecordPage> {
                                     context, items[index].list[index2]['id']);
                               },
                               child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
                                     '${items[index].list[index2]['classification_name']}',
-                                    textAlign: TextAlign.left,
                                   ),
                                   Text(
                                     '${items[index].list[index2]['type'] == 1 ? '+' : '-'}${items[index].list[index2]['money']}',
-                                    textAlign: TextAlign.right,
                                   ),
                                 ],
                               ),
