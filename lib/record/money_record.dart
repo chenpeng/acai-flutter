@@ -207,7 +207,7 @@ class MoneyRecordState extends State<MoneyRecordPage> {
                         child: Column(
                           children: [
                             Text('收入'),
-                            Text('+$totalIncomeMoney'),
+                            Text('+${totalIncomeMoney.toStringAsFixed(2)}'),
                           ],
                         ),
                       ),
@@ -215,7 +215,7 @@ class MoneyRecordState extends State<MoneyRecordPage> {
                         child: Column(
                           children: [
                             Text('支出'),
-                            Text('-$totalPayMoney'),
+                            Text('-${totalPayMoney.toStringAsFixed(2)}'),
                           ],
                         ),
                       ),
@@ -250,8 +250,8 @@ class MoneyRecordState extends State<MoneyRecordPage> {
                                   style: TextStyle(fontSize: 15),
                                 ),
                                 Text(
-                                  '收入:+${items[index].incomeMoney}  ' +
-                                      '支出:-${items[index].payMoney}',
+                                  '收入:+${items[index].incomeMoney.toStringAsFixed(2)}  ' +
+                                      '支出:-${items[index].payMoney.toStringAsFixed(2)}',
                                   style: TextStyle(fontSize: 15),
                                 ),
                               ],
