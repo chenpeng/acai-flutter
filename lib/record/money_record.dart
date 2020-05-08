@@ -50,7 +50,6 @@ class MoneyRecordState extends State<MoneyRecordPage> {
         totalPayMoney += element.payMoney;
         totalIncomeMoney += element.incomeMoney;
       });
-      print(list);
       setState(() {
         items = list;
       });
@@ -76,7 +75,7 @@ class MoneyRecordState extends State<MoneyRecordPage> {
       });
       var weekday = DateTime.parse(key).weekday;
       var weekStr = "";
-      switch(weekday){
+      switch (weekday) {
         case 1:
           weekStr = "星期一";
           break;
@@ -99,11 +98,64 @@ class MoneyRecordState extends State<MoneyRecordPage> {
           weekStr = "星期日";
           break;
       }
-      MoneyRecordDto moneyRecordDto =
-          new MoneyRecordDto(key, weekStr, payMoney, incomeMoney, value);
+      var recordDateStr = DateTime.parse(key).month.toString() +
+          "-" +
+          DateTime.parse(key).day.toString();
+      MoneyRecordDto moneyRecordDto = new MoneyRecordDto(
+          recordDateStr, weekStr, payMoney, incomeMoney, value);
       list.add(moneyRecordDto);
     });
     return list;
+  }
+
+  // 年份选择器
+  showYearPicker(BuildContext context) {
+    final picker = CupertinoPicker(
+      backgroundColor: CupertinoColors.white,
+      scrollController: FixedExtentScrollController(initialItem: 0),
+      itemExtent: 30.0,
+      onSelectedItemChanged: (index) {
+        year = yearList[index];
+        findMoneyRecordList();
+      },
+      children: yearList.map((e) {
+        return Text(e.toString());
+      }).toList(),
+    );
+    showCupertinoModalPopup(
+      context: context,
+      builder: (context) {
+        return Container(
+          height: 200,
+          child: picker,
+        );
+      },
+    );
+  }
+
+  // 月份选择器
+  showMonthPicker(BuildContext context) {
+    final picker = CupertinoPicker(
+      backgroundColor: CupertinoColors.white,
+      scrollController: FixedExtentScrollController(initialItem: month - 1),
+      itemExtent: 30.0,
+      onSelectedItemChanged: (index) {
+        month = monthList[index];
+        findMoneyRecordList();
+      },
+      children: monthList.map((e) {
+        return Text(e.toString());
+      }).toList(),
+    );
+    showCupertinoModalPopup(
+      context: context,
+      builder: (context) {
+        return Container(
+          height: 200,
+          child: picker,
+        );
+      },
+    );
   }
 
   @override
@@ -119,88 +171,99 @@ class MoneyRecordState extends State<MoneyRecordPage> {
     return CupertinoPageScaffold(
       resizeToAvoidBottomInset: false,
       navigationBar: CupertinoNavigationBar(
+        backgroundColor: Colors.lightBlue,
         middle: Text(widget.title),
       ),
       child: SafeArea(
         child: SingleChildScrollView(
           child: Column(
             children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Container(
-                      margin: EdgeInsets.all(10),
-                      height: 30,
-                      child: CupertinoPicker(
-                        scrollController:
-                            FixedExtentScrollController(initialItem: 0),
-                        itemExtent: 30.0,
-                        onSelectedItemChanged: (index) {
-                          year = yearList[index];
-                          findMoneyRecordList();
-                        },
-                        children:
-                            yearList.map((e) => Text(e.toString())).toList(),
+              Container(
+                color: Colors.lightBlue,
+                child: Padding(
+                  padding: const EdgeInsets.all(10.0),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            GestureDetector(
+                              onTap: () {
+                                showYearPicker(context);
+                              },
+                              child: Text('$year年'),
+                            ),
+                            GestureDetector(
+                              onTap: () {
+                                showMonthPicker(context);
+                              },
+                              child: Text('$month月'),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ),
-                  Expanded(
-                    child: Container(
-                      height: 30,
-                      child: CupertinoPicker(
-                        scrollController:
-                            FixedExtentScrollController(initialItem: month - 1),
-                        itemExtent: 30.0,
-                        onSelectedItemChanged: (index) {
-                          month = monthList[index];
-                          findMoneyRecordList();
-                        },
-                        children:
-                            monthList.map((e) => Text(e.toString())).toList(),
+                      Expanded(
+                        child: Column(
+                          children: [
+                            Text('收入'),
+                            Text('+$totalIncomeMoney'),
+                          ],
+                        ),
                       ),
-                    ),
+                      Expanded(
+                        child: Column(
+                          children: [
+                            Text('支出'),
+                            Text('-$totalPayMoney'),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                  Expanded(
-                    child: Text('收入：+$totalIncomeMoney'),
-                  ),
-                  Expanded(
-                    child: Text('支出：-$totalPayMoney'),
-                  ),
-                ],
+                ),
               ),
               Row(
                 children: [
                   Expanded(
                     child: ListView.separated(
-                      separatorBuilder: (context, index) => Divider(
-                          color: CupertinoColors.systemRed, height: 10.0),
+                      separatorBuilder: (context, index) {
+                        return Container(
+                          color: Colors.white,
+                          height: 10,
+                        );
+                      },
                       physics: new NeverScrollableScrollPhysics(),
-                      padding: EdgeInsets.all(30),
+                      padding: EdgeInsets.all(10),
                       itemCount: items?.length ?? 0,
                       shrinkWrap: true,
                       itemBuilder: (context, index) => Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                '${items[index].recordDateStr}  ${items[index].weekStr}  ',
-                                style: TextStyle(fontSize: 15),
-                              ),
-                              Text(
-                                '收入:+${items[index].incomeMoney}  ' +
-                                    '支出:-${items[index].payMoney}',
-                                style: TextStyle(fontSize: 15),
-                              ),
-                            ],
+                          Container(
+                            color: CupertinoColors.systemGrey6,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  '${items[index].recordDateStr}  ${items[index].weekStr}  ',
+                                  style: TextStyle(fontSize: 15),
+                                ),
+                                Text(
+                                  '收入:+${items[index].incomeMoney}  ' +
+                                      '支出:-${items[index].payMoney}',
+                                  style: TextStyle(fontSize: 15),
+                                ),
+                              ],
+                            ),
                           ),
-                          Divider(color: CupertinoColors.white, height: 10.0),
                           ListView.separated(
                             separatorBuilder: (context, index) => Divider(
-                                color: CupertinoColors.activeBlue,
-                                height: 30.0),
+                                indent: 40.0,
+                                color: CupertinoColors.systemGrey4,
+                                height: 10.0),
                             physics: new NeverScrollableScrollPhysics(),
+                            padding: EdgeInsets.all(10),
                             itemCount: items[index].list?.length ?? 0,
                             shrinkWrap: true,
                             itemBuilder: (context, index2) => GestureDetector(
