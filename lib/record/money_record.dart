@@ -40,6 +40,8 @@ class MoneyRecordState extends State<MoneyRecordPage> {
   }
 
   findMoneyRecordList() async {
+    totalPayMoney = 0.0;
+    totalIncomeMoney = 0.0;
     var dio = await DioUtils.getDio();
     var response = await dio.get('/api/moneyRecord',
         queryParameters: {'year': year, 'month': month});
