@@ -42,7 +42,7 @@ class DioUtils {
           if (code == -1) {
             Navigator.push(
               ctx,
-              new MaterialPageRoute(
+              new CupertinoPageRoute(
                 builder: (context) => new Login(text: '登录注册'),
               ),
             );

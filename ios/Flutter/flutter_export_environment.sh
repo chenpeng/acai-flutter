@@ -2,7 +2,7 @@
 # This is a generated file; do not edit or check into version control.
 export "FLUTTER_ROOT=/Users/chenpeng/flutter"
 export "FLUTTER_APPLICATION_PATH=/Users/chenpeng/workbox/acai_flutter"
-export "FLUTTER_TARGET=/Users/chenpeng/workbox/acai_flutter/lib/main_release.dart"
+export "FLUTTER_TARGET=/Users/chenpeng/workbox/acai_flutter/lib/main.dart"
 export "FLUTTER_BUILD_DIR=build"
 export "SYMROOT=${SOURCE_ROOT}/../build/ios"
 export "OTHER_LDFLAGS=$(inherited) -framework Flutter"
