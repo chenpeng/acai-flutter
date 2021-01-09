@@ -11,7 +11,7 @@ class MoneyChartPage extends StatefulWidget {
 }
 
 class MoneyChartState extends State<MoneyChartPage> {
-  List yearList = [2020];
+  List yearList = [2020,2021];
   List monthList = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 
   // "类型"数据源(写死)
@@ -73,6 +73,8 @@ class MoneyChartState extends State<MoneyChartPage> {
                   child: Container(
                     height: 30,
                     child: CupertinoPicker(
+                      scrollController:
+                      FixedExtentScrollController(initialItem: DateTime.now().year-2020),
                       itemExtent: 30.0,
                       onSelectedItemChanged: (index) {
                         year = yearList[index];

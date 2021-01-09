@@ -16,7 +16,7 @@ class MoneyRecordPage extends StatefulWidget {
 }
 
 class MoneyRecordState extends State<MoneyRecordPage> {
-  List yearList = [2020];
+  List yearList = [2020,2021];
   List monthList = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
   List items = new List();
   double totalPayMoney = 0.0;
