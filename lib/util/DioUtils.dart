@@ -26,12 +26,11 @@ class DioUtils {
     dio.options.baseUrl = prefs.getString('baseUrl');
     dio.options.connectTimeout = 5000;
     dio.options.receiveTimeout = 3000;
-    dio.interceptors
-        .add(InterceptorsWrapper(onRequest: (RequestOptions options) async {
+    dio.interceptors.add(InterceptorsWrapper(onRequest: (options, handler) {
       String accessToken = prefs.getString("accessToken");
       options.headers.putIfAbsent("accessToken", () => accessToken);
-      return options;
-    }, onResponse: (Response response) async {
+      return handler.next(options);
+    }, onResponse: (response, handler) async {
       if (response.statusCode == HttpStatus.ok) {
         Headers headers = response.headers;
         String value = headers.value("content-type");
@@ -54,8 +53,8 @@ class DioUtils {
       } else {
         showToast("未知错误" + response.statusCode.toString());
       }
-      return response;
-    }, onError: (DioError e) async {
+      return handler.next(response);
+    }, onError: (DioError e, handler) async {
       showToast("未知错误" + e.toString());
       return e;
     }));

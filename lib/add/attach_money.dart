@@ -260,7 +260,7 @@ class AttachMoneyState extends State<AttachMoneyPage> {
                     child: CupertinoButton(
                       child: Text('删除'),
                       color: CupertinoColors.systemRed,
-                      onPressed: (){
+                      onPressed: () {
                         alertDeleteDialog();
                       },
                     ),
@@ -315,7 +315,8 @@ class AttachMoneyState extends State<AttachMoneyPage> {
   }
 
   Future openCamera() async {
-    var file = await ImagePicker.pickImage(source: ImageSource.camera);
+    final pickedFile = await ImagePicker().getImage(source: ImageSource.camera);
+    var file = File(pickedFile.path);
     upLoadImage(file);
     setState(() {
       image = file;
@@ -323,7 +324,9 @@ class AttachMoneyState extends State<AttachMoneyPage> {
   }
 
   Future openGallery() async {
-    var file = await ImagePicker.pickImage(source: ImageSource.gallery);
+    final pickedFile =
+        await ImagePicker().getImage(source: ImageSource.gallery);
+    var file = File(pickedFile.path);
     upLoadImage(file);
     setState(() {
       image = file;
@@ -371,35 +374,37 @@ class AttachMoneyState extends State<AttachMoneyPage> {
 
   alertDeleteDialog() {
     print("alertDeleteDialog");
-    showCupertinoDialog(context:context,builder: (BuildContext context){
-      return CupertinoAlertDialog(
-        title: Text('确认删除吗？'),
-        content: SingleChildScrollView(
-          child: ListBody(
-            children: <Widget>[
-              Text('类别：' + moneyRecord.classificationName),
-              Text('金额：' + moneyRecord.money.toString()),
-              Text('备注：' + moneyRecord.remark),
-              Text('时间：' + moneyRecord.recordDateTime),
+    showCupertinoDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return CupertinoAlertDialog(
+            title: Text('确认删除吗？'),
+            content: SingleChildScrollView(
+              child: ListBody(
+                children: <Widget>[
+                  Text('类别：' + moneyRecord.classificationName),
+                  Text('金额：' + moneyRecord.money.toString()),
+                  Text('备注：' + moneyRecord.remark),
+                  Text('时间：' + moneyRecord.recordDateTime),
+                ],
+              ),
+            ),
+            actions: <Widget>[
+              CupertinoDialogAction(
+                child: Text('取消'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+              CupertinoDialogAction(
+                child: Text('删除'),
+                onPressed: () {
+                  deleteMoneyRecord();
+                },
+              ),
             ],
-          ),
-        ),
-        actions: <Widget>[
-          CupertinoDialogAction(
-            child: Text('取消'),
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-          ),
-          CupertinoDialogAction(
-            child: Text('删除'),
-            onPressed: (){
-              deleteMoneyRecord();
-            },
-          ),
-        ],
-      );
-    });
+          );
+        });
   }
 
   deleteMoneyRecord() async {
